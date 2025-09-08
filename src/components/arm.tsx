@@ -5,6 +5,7 @@ import * as THREE from 'three';
 
 interface ThreeSceneProps {
   className?: string;
+  color?: string;
 }
 
 // Robot arm dimensions in meters (1 cm = 0.01 m)
@@ -31,7 +32,19 @@ const HOME_POSE = {
   j4: 90 * Math.PI / 180      // pipette tilt: 0° (keep straight)
 };
 
-export default function RobotArmScene({ className = '' }: ThreeSceneProps) {
+// Color mapping function
+const getColorHex = (colorName: string): number => {
+  const colorMap: { [key: string]: number } = {
+    red: 0xff0000,
+    blue: 0x0000ff,
+    green: 0x00ff00,
+    black: 0x333333,
+    white: 0xffffff,
+  };
+  return colorMap[colorName.toLowerCase()] || 0x666666; // default gray
+};
+
+export default function RobotArmScene({ className = '', color = 'black' }: ThreeSceneProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const [isClient, setIsClient] = useState(false);
 
@@ -67,24 +80,25 @@ export default function RobotArmScene({ className = '' }: ThreeSceneProps) {
     // Add renderer to DOM
     container.appendChild(renderer.domElement);
 
-    // Materials
+    // Materials - use selected color for main robot parts
+    const selectedColor = getColorHex(color);
     const baseMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0x666666, 
+      color: selectedColor, 
       metalness: 0.3, 
       roughness: 0.7 
     });
     const segment1Material = new THREE.MeshStandardMaterial({ 
-      color: 0x777777, 
+      color: selectedColor, 
       metalness: 0.3, 
       roughness: 0.7 
     });
     const segment2Material = new THREE.MeshStandardMaterial({ 
-      color: 0x888888, 
+      color: selectedColor, 
       metalness: 0.3, 
       roughness: 0.7 
     });
     const segment3Material = new THREE.MeshStandardMaterial({ 
-      color: 0x999999, 
+      color: selectedColor, 
       metalness: 0.3, 
       roughness: 0.7 
     });
@@ -279,7 +293,7 @@ export default function RobotArmScene({ className = '' }: ThreeSceneProps) {
       jointMaterial.dispose();
       renderer.dispose();
     };
-  }, [isClient]);
+  }, [isClient, color]);
 
   if (!isClient) {
     return (
