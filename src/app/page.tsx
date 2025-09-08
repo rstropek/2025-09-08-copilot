@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import RobotArmScene from "@/components/arm";
+import JointControls, { JointAngles } from "@/components/joint-controls";
 
 const AVAILABLE_COLORS = [
   { value: 'red', label: 'Red' },
@@ -11,8 +12,18 @@ const AVAILABLE_COLORS = [
   { value: 'white', label: 'White' },
 ];
 
+// Default home pose angles in radians
+const DEFAULT_JOINT_ANGLES: JointAngles = {
+  j0: 0,                     // base yaw: 0°
+  j1: -75 * Math.PI / 180,   // shoulder pitch: -75°
+  j2: 45 * Math.PI / 180,    // elbow pitch: +45°
+  j3: 15 * Math.PI / 180,    // wrist pitch: +15°
+  j4: 90 * Math.PI / 180     // pipette tilt: 90°
+};
+
 export default function Home() {
   const [selectedColor, setSelectedColor] = useState('black');
+  const [jointAngles, setJointAngles] = useState<JointAngles>(DEFAULT_JOINT_ANGLES);
 
   return (
     <div style={{ padding: '20px' }}>
@@ -43,7 +54,17 @@ export default function Home() {
         </select>
       </div>
 
-      <RobotArmScene className="scene" color={selectedColor} />
+      <JointControls
+        angles={jointAngles}
+        onAnglesChange={setJointAngles}
+        className="joint-controls"
+      />
+
+      <RobotArmScene 
+        className="scene" 
+        color={selectedColor} 
+        jointAngles={jointAngles}
+      />
     </div>
   );
 }

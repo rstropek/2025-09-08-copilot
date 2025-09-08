@@ -29,7 +29,7 @@ I want to be able to move the camera in #file:arm.tsx using the mouse. It should
 
 ---
 
-This next.js 15 app displays a robot arm. It can already be moved with sliders. I want to have an additional select box where I can choose one of the following colors:
+This next.js 15 app displays a robot arm. I want to have an additional select box where I can choose one of the following colors:
 
 * red
 * blue
@@ -37,7 +37,7 @@ This next.js 15 app displays a robot arm. It can already be moved with sliders. 
 * black
 * white
 
-The material of the robot should change accordingly.
+The material of the robot should change accordingly. After writing the code, start the app, make a screenshot, and verify if color changing works.
 
 ---
 

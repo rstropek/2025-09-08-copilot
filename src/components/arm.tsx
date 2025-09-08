@@ -4,9 +4,18 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
+export interface JointAngles {
+  j0: number; // Base yaw
+  j1: number; // Shoulder pitch
+  j2: number; // Elbow pitch
+  j3: number; // Wrist pitch
+  j4: number; // Pipette tilt
+}
+
 interface ThreeSceneProps {
   className?: string;
   color?: string;
+  jointAngles?: JointAngles;
 }
 
 // Robot arm dimensions in meters (1 cm = 0.01 m)
@@ -45,9 +54,12 @@ const getColorHex = (colorName: string): number => {
   return colorMap[colorName.toLowerCase()] || 0x666666; // default gray
 };
 
-export default function RobotArmScene({ className = '', color = 'black' }: ThreeSceneProps) {
+export default function RobotArmScene({ className = '', color = 'black', jointAngles }: ThreeSceneProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const [isClient, setIsClient] = useState(false);
+
+  // Use provided angles or fall back to home pose
+  const currentAngles = jointAngles || HOME_POSE;
 
   useEffect(() => {
     setIsClient(true);
@@ -151,12 +163,12 @@ export default function RobotArmScene({ className = '', color = 'black' }: Three
     // Create a group for everything that rotates with J0 (base yaw)
     const j0Group = new THREE.Group();
     j0Group.position.y = DIMENSIONS.base.height;
-    j0Group.rotation.y = HOME_POSE.j0;
+    j0Group.rotation.y = currentAngles.j0;
     robotArm.add(j0Group);
 
     // Create J1 group (shoulder pitch) - controls segment1 angle from base
     const j1Group = new THREE.Group();
-    j1Group.rotation.x = HOME_POSE.j1;
+    j1Group.rotation.x = currentAngles.j1;
     j0Group.add(j1Group);
 
     // Segment 1 (shoulder link) - rotates with J1
@@ -183,7 +195,7 @@ export default function RobotArmScene({ className = '', color = 'black' }: Three
     // Create J2 group (elbow pitch) at the end of segment 1
     const j2Group = new THREE.Group();
     j2Group.position.z = DIMENSIONS.segment1.length;
-    j2Group.rotation.x = HOME_POSE.j2;
+    j2Group.rotation.x = currentAngles.j2;
     j1Group.add(j2Group);
 
     // Segment 2 (elbow link) - rotates with J2
@@ -210,7 +222,7 @@ export default function RobotArmScene({ className = '', color = 'black' }: Three
     // Create J3 group (wrist pitch) at the end of segment 2
     const j3Group = new THREE.Group();
     j3Group.position.z = DIMENSIONS.segment2.length;
-    j3Group.rotation.x = HOME_POSE.j3;
+    j3Group.rotation.x = currentAngles.j3;
     j2Group.add(j3Group);
 
     // Segment 3 (wrist link) - rotates with J3
@@ -237,7 +249,7 @@ export default function RobotArmScene({ className = '', color = 'black' }: Three
     // Create J4 group (pipette tilt) at the end of segment 3
     const j4Group = new THREE.Group();
     j4Group.position.z = DIMENSIONS.segment3.length;
-    j4Group.rotation.x = HOME_POSE.j4;
+    j4Group.rotation.x = currentAngles.j4;
     j3Group.add(j4Group);
 
     // Segment 4 (pipette) - rotates with J4
@@ -337,7 +349,7 @@ export default function RobotArmScene({ className = '', color = 'black' }: Three
       jointMaterial.dispose();
       renderer.dispose();
     };
-  }, [isClient, color]);
+  }, [isClient, color, currentAngles]);
 
   if (!isClient) {
     return (
