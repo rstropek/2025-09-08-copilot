@@ -1,0 +1,1430 @@
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an expert AI programming assistant, working with a user in the VS Code editor.
+When asked for your name, you must respond with \"GitHub Copilot\".
+Follow the user's requirements carefully & to the letter.
+Follow Microsoft content policies.
+Avoid content that violates copyrights.
+If you are asked to generate content that is harmful, hateful, racist, sexist, lewd, or violent, only respond with \"Sorry, I can't assist with that.\"
+Keep your answers short and impersonal.
+<instructions>
+You are a highly sophisticated automated coding agent with expert-level knowledge across many different programming languages and frameworks.
+The user will ask a question, or ask you to perform a task, and it may require lots of research to answer correctly. There is a selection of tools that let you perform actions or retrieve helpful context to answer the user's question.
+You will be given some context and attachments along with the user prompt. You can use them if they are relevant to the task, and ignore them if not. Some attachments may be summarized. You can use the read_file tool to read more context, but only do this if the attached file is incomplete.
+If you can infer the project type (languages, frameworks, and libraries) from the user's query or the context that you have, make sure to keep them in mind when making changes.
+If the user wants you to implement a feature and they have not specified the files to edit, first break down the user's request into smaller concepts and think about the kinds of files you need to grasp each concept.
+If you aren't sure which tool is relevant, you can call multiple tools. You can call tools repeatedly to take actions or gather as much context as needed until you have completed the task fully. Don't give up unless you are sure the request cannot be fulfilled with the tools you have. It's YOUR RESPONSIBILITY to make sure that you have done all you can to collect necessary context.
+When reading files, prefer reading large meaningful chunks rather than consecutive small sections to minimize tool calls and gain better context.
+Don't make assumptions about the situation- gather context first, then perform the task or answer the question.
+Think creatively and explore the workspace in order to make a complete fix.
+Don't repeat yourself after a tool call, pick up where you left off.
+NEVER print out a codeblock with file changes unless the user asked for it. Use the appropriate edit tool instead.
+NEVER print out a codeblock with a terminal command to run unless the user asked for it. Use the run_in_terminal tool instead.
+You don't need to read a file if it's already provided in context.
+</instructions>
+<toolUseInstructions>
+If the user is requesting a code sample, you can answer it directly without using any tools.
+When using a tool, follow the JSON schema very carefully and make sure to include ALL required properties.
+No need to ask permission before using a tool.
+NEVER say the name of a tool to a user. For example, instead of saying that you'll use the run_in_terminal tool, say \"I'll run the command in a terminal\".
+If you think running multiple tools can answer the user's question, prefer calling them in parallel whenever possible, but do not call semantic_search in parallel.
+When using the read_file tool, prefer reading a large section over calling the read_file tool many times in sequence. You can also think of all the pieces you may be interested in and read them in parallel. Read large enough context to ensure you get what you need.
+If semantic_search returns the full contents of the text files in the workspace, you have all the workspace context.
+You can use the grep_search to get an overview of a file by searching for a string within that one file, instead of using read_file many times.
+If you don't know exactly the string or filename pattern you're looking for, use semantic_search to do a semantic search across the workspace.
+Don't call the run_in_terminal tool multiple times in parallel. Instead, run one command and wait for the output before running the next command.
+When invoking a tool that takes a file path, always use the absolute file path. If the file has a scheme like untitled: or vscode-userdata:, then use a URI with the scheme.
+NEVER try to edit a file by running terminal commands unless the user specifically asks for it.
+Tools can be disabled by the user. You may see tools used previously in the conversation that are not currently available. Be careful to only use the tools that are currently available to you.
+</toolUseInstructions>
+<notebookInstructions>
+To edit notebook files in the workspace, you can use the edit_notebook_file tool.
+Use the run_notebook_cell tool instead of executing Jupyter related commands in the Terminal, such as `jupyter notebook`, `jupyter lab`, `install jupyter` or the like.
+Use the copilot_getNotebookSummary tool to get the summary of the notebook (this includes the list or all cells along with the Cell Id, Cell type and Cell Language, execution details and mime types of the outputs, if any).
+Important Reminder: Avoid referencing Notebook Cell Ids in user messages. Use cell number instead.
+Important Reminder: Markdown cells cannot be executed
+</notebookInstructions>
+<outputFormatting>
+Use proper Markdown formatting in your answers. When referring to a filename or symbol in the user's workspace, wrap it in backticks.
+<example>
+The class `Person` is in `src/models/person.ts`.
+</example>
+
+</outputFormatting>",
+      "copilot_cache_control": {
+        "type": "ephemeral"
+      }
+    },
+    {
+      "role": "user",
+      "content": "<environment_info>
+The user's current OS is: Linux
+The user's default shell is: \"bash\". When you generate terminal commands, please generate them correctly for this shell.
+</environment_info>
+<workspace_info>
+I am working in a workspace with the following folders:
+- /home/rainer/live/2025-09-08-copilot 
+I am working in a workspace that has the following structure:
+```
+Dockerfile
+eslint.config.mjs
+next-env.d.ts
+next.config.ts
+package.json
+tsconfig.json
+public/
+specifications/
+\tsimple-prompts.md
+\t01-basic-arm/
+\t\treadme.md
+\t02-pipette-vertical/
+\t\treadme.md
+src/
+\tapp/
+\t\tglobals.css
+\t\tlayout.tsx
+\t\tpage.module.css
+\t\tpage.tsx
+\tcomponents/
+\t\tarm.tsx
+\tlib/
+```
+This is the state of the context at this point in the conversation. The view of the workspace structure may be truncated. You can use tools to collect more context if needed.
+</workspace_info>",
+      "copilot_cache_control": {
+        "type": "ephemeral"
+      }
+    },
+    {
+      "role": "user",
+      "content": "<attachments>
+<attachment id=\"arm.tsx\" filePath=\"/home/rainer/live/2025-09-08-copilot/src/components/arm.tsx\">
+```tsx
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+
+interface ThreeSceneProps {
+  className?: string;
+  color?: string;
+}
+
+// Robot arm dimensions in meters (1 cm = 0.01 m)
+const DIMENSIONS = {
+  base: { diameter: 0.50, height: 0.20 },
+  segment1: { width: 0.10, height: 0.10, length: 0.60 },
+  segment2: { width: 0.08, height: 0.08, length: 0.45 },
+  segment3: { width: 0.06, height: 0.06, length: 0.25 },
+  segment4: { diameter: 0.02, height: 0.10 },
+  joints: {
+    shoulder: 0.06,
+    elbow: 0.05,
+    wrist: 0.04,
+    pipette: 0.015
+  }
+};
+
+// Home pose angles in radians
+const HOME_POSE = {
+  j0: 0,                     // base yaw: 0°
+  j1: -75 * Math.PI / 180,   // shoulder pitch: -30° (lift shoulder up moderately)
+  j2: 45 * Math.PI / 180,    // elbow pitch: +60° (bend elbow forward)
+  j3: 15 * Math.PI / 180,   // wrist pitch: -30° (adjust wrist to level)
+  j4: 90 * Math.PI / 180      // pipette tilt: 0° (keep straight)
+};
+
+// Color mapping function
+const getColorHex = (colorName: string): number => {
+  const colorMap: { [key: string]: number } = {
+    red: 0xff0000,
+    blue: 0x0000ff,
+    green: 0x00ff00,
+    black: 0x333333,
+    white: 0xffffff,
+  };
+  return colorMap[colorName.toLowerCase()] || 0x666666; // default gray
+};
+
+export default function RobotArmScene({ className = '', color = 'black' }: ThreeSceneProps) {
+  const mountRef = useRef<HTMLDivElement>(null);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient || !mountRef.current) return;
+
+    const container = mountRef.current;
+    const { clientWidth: width, clientHeight: height } = container;
+
+    // Scene setup
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf0f0f0);
+
+    // Camera setup
+    const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
+    camera.position.set(1.6, 1.1, 1.8);
+    camera.lookAt(0, 0, 0);
+
+    // Renderer setup with shadows
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: true,
+      alpha: true 
+    });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    // Add renderer to DOM
+    container.appendChild(renderer.domElement);
+
+    // Camera controls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.screenSpacePanning = false;
+    controls.minDistance = 0.5;
+    controls.maxDistance = 5;
+    controls.maxPolarAngle = Math.PI;
+    controls.target.set(0, 0.5, 0); // Look at center of robot arm
+
+    // Materials - use selected color for main robot parts
+    const selectedColor = getColorHex(color);
+    const baseMaterial = new THREE.MeshStandardMaterial({ 
+      color: selectedColor, 
+      metalness: 0.3, 
+      roughness: 0.7 
+    });
+    const segment1Material = new THREE.MeshStandardMaterial({ 
+      color: selectedColor, 
+      metalness: 0.3, 
+      roughness: 0.7 
+    });
+    const segment2Material = new THREE.MeshStandardMaterial({ 
+      color: selectedColor, 
+      metalness: 0.3, 
+      roughness: 0.7 
+    });
+    const segment3Material = new THREE.MeshStandardMaterial({ 
+      color: selectedColor, 
+      metalness: 0.3, 
+      roughness: 0.7 
+    });
+    const pipetteMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0xffffff, 
+      metalness: 0.1, 
+      roughness: 0.3 
+    });
+    const jointMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0x444444, 
+      metalness: 0.5, 
+      roughness: 0.5 
+    });
+
+    // Create robot arm
+    const robotArm = new THREE.Group();
+
+    // Base
+    const baseGeometry = new THREE.CylinderGeometry(
+      DIMENSIONS.base.diameter / 2, 
+      DIMENSIONS.base.diameter / 2, 
+      DIMENSIONS.base.height
+    );
+    const base = new THREE.Mesh(baseGeometry, baseMaterial);
+    base.position.y = DIMENSIONS.base.height / 2;
+    base.castShadow = true;
+    base.receiveShadow = true;
+    robotArm.add(base);
+
+    // J0 joint (base yaw) - at top of base
+    const shoulderJoint = new THREE.Mesh(
+      new THREE.SphereGeometry(DIMENSIONS.joints.shoulder),
+      jointMaterial
+    );
+    shoulderJoint.position.y = DIMENSIONS.base.height;
+    shoulderJoint.castShadow = true;
+    robotArm.add(shoulderJoint);
+
+    // Create a group for everything that rotates with J0 (base yaw)
+    const j0Group = new THREE.Group();
+    j0Group.position.y = DIMENSIONS.base.height;
+    j0Group.rotation.y = HOME_POSE.j0;
+    robotArm.add(j0Group);
+
+    // Create J1 group (shoulder pitch) - controls segment1 angle from base
+    const j1Group = new THREE.Group();
+    j1Group.rotation.x = HOME_POSE.j1;
+    j0Group.add(j1Group);
+
+    // Segment 1 (shoulder link) - rotates with J1
+    const segment1Geometry = new THREE.BoxGeometry(
+      DIMENSIONS.segment1.width,
+      DIMENSIONS.segment1.height,
+      DIMENSIONS.segment1.length
+    );
+    const segment1 = new THREE.Mesh(segment1Geometry, segment1Material);
+    segment1.position.z = DIMENSIONS.segment1.length / 2;
+    segment1.castShadow = true;
+    segment1.receiveShadow = true;
+    j1Group.add(segment1);
+
+    // J2 joint (elbow) - at the end of segment 1
+    const elbowJoint = new THREE.Mesh(
+      new THREE.SphereGeometry(DIMENSIONS.joints.elbow),
+      jointMaterial
+    );
+    elbowJoint.position.z = DIMENSIONS.segment1.length;
+    elbowJoint.castShadow = true;
+    j1Group.add(elbowJoint);
+
+    // Create J2 group (elbow pitch) at the end of segment 1
+    const j2Group = new THREE.Group();
+    j2Group.position.z = DIMENSIONS.segment1.length;
+    j2Group.rotation.x = HOME_POSE.j2;
+    j1Group.add(j2Group);
+
+    // Segment 2 (elbow link) - rotates with J2
+    const segment2Geometry = new THREE.BoxGeometry(
+      DIMENSIONS.segment2.width,
+      DIMENSIONS.segment2.height,
+      DIMENSIONS.segment2.length
+    );
+    const segment2 = new THREE.Mesh(segment2Geometry, segment2Material);
+    segment2.position.z = DIMENSIONS.segment2.length / 2;
+    segment2.castShadow = true;
+    segment2.receiveShadow = true;
+    j2Group.add(segment2);
+
+    // J3 joint (wrist) - at the end of segment 2
+    const wristJoint = new THREE.Mesh(
+      new THREE.SphereGeometry(DIMENSIONS.joints.wrist),
+      jointMaterial
+    );
+    wristJoint.position.z = DIMENSIONS.segment2.length;
+    wristJoint.castShadow = true;
+    j2Group.add(wristJoint);
+
+    // Create J3 group (wrist pitch) at the end of segment 2
+    const j3Group = new THREE.Group();
+    j3Group.position.z = DIMENSIONS.segment2.length;
+    j3Group.rotation.x = HOME_POSE.j3;
+    j2Group.add(j3Group);
+
+    // Segment 3 (wrist link) - rotates with J3
+    const segment3Geometry = new THREE.BoxGeometry(
+      DIMENSIONS.segment3.width,
+      DIMENSIONS.segment3.height,
+      DIMENSIONS.segment3.length
+    );
+    const segment3 = new THREE.Mesh(segment3Geometry, segment3Material);
+    segment3.position.z = DIMENSIONS.segment3.length / 2;
+    segment3.castShadow = true;
+    segment3.receiveShadow = true;
+    j3Group.add(segment3);
+
+    // J4 joint (pipette) - at the end of segment 3
+    const pipetteJoint = new THREE.Mesh(
+      new THREE.SphereGeometry(DIMENSIONS.joints.pipette),
+      jointMaterial
+    );
+    pipetteJoint.position.z = DIMENSIONS.segment3.length;
+    pipetteJoint.castShadow = true;
+    j3Group.add(pipetteJoint);
+
+    // Create J4 group (pipette tilt) at the end of segment 3
+    const j4Group = new THREE.Group();
+    j4Group.position.z = DIMENSIONS.segment3.length;
+    j4Group.rotation.x = HOME_POSE.j4;
+    j3Group.add(j4Group);
+
+    // Segment 4 (pipette) - rotates with J4
+    const segment4Geometry = new THREE.CylinderGeometry(
+      DIMENSIONS.segment4.diameter / 2,
+      DIMENSIONS.segment4.diameter / 2,
+      DIMENSIONS.segment4.height
+    );
+    const segment4 = new THREE.Mesh(segment4Geometry, pipetteMaterial);
+    segment4.position.z = DIMENSIONS.segment4.height / 2;
+    segment4.rotation.x = Math.PI / 2; // Rotate to align with Z axis
+    segment4.castShadow = true;
+    segment4.receiveShadow = true;
+    j4Group.add(segment4);
+
+    scene.add(robotArm);
+
+    // Ground grid
+    const gridHelper = new THREE.GridHelper(4, 40);
+    gridHelper.receiveShadow = true;
+    scene.add(gridHelper);
+
+    // Axes helper
+    const axesHelper = new THREE.AxesHelper(0.2);
+    scene.add(axesHelper);
+
+    // Lighting
+    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
+    scene.add(hemisphereLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(3, 4, 5);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
+    directionalLight.shadow.camera.near = 0.5;
+    directionalLight.shadow.camera.far = 50;
+    directionalLight.shadow.camera.left = -5;
+    directionalLight.shadow.camera.right = 5;
+    directionalLight.shadow.camera.top = 5;
+    directionalLight.shadow.camera.bottom = -5;
+    scene.add(directionalLight);
+
+    // Animation loop
+    let animationId: number;
+    const animate = () => {
+      animationId = requestAnimationFrame(animate);
+      
+      // Update controls
+      controls.update();
+      
+      // Render the scene
+      renderer.render(scene, camera);
+    };
+    
+    // Start animation loop
+    animate();
+
+    // Handle window resize
+    const handleResize = () => {
+      const { clientWidth: newWidth, clientHeight: newHeight } = container;
+      camera.aspect = newWidth / newHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(newWidth, newHeight);
+    };
+    
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup function
+    return () => {
+      // Cancel animation frame
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+      
+      // Remove event listeners
+      window.removeEventListener('resize', handleResize);
+      
+      // Dispose controls
+      controls.dispose();
+      
+      if (container && renderer.domElement) {
+        container.removeChild(renderer.domElement);
+      }
+      
+      // Dispose of Three.js resources
+      baseGeometry.dispose();
+      segment1Geometry.dispose();
+      segment2Geometry.dispose();
+      segment3Geometry.dispose();
+      segment4Geometry.dispose();
+      baseMaterial.dispose();
+      segment1Material.dispose();
+      segment2Material.dispose();
+      segment3Material.dispose();
+      pipetteMaterial.dispose();
+      jointMaterial.dispose();
+      renderer.dispose();
+    };
+  }, [isClient, color]);
+
+  if (!isClient) {
+    return (
+      <div>
+        <span>Loading 3D Scene...</span>
+      </div>
+    );
+  }
+
+  return <div ref={mountRef} className={className} />;
+}
+```
+</attachment>
+
+</attachments>
+<context>
+The current date is September 8, 2025.
+Tasks: No tasks found.Terminals:
+Terminal: bash
+Last Command: npm run dev
+Cwd: /home/rainer/live/2025-09-08-copilot
+Exit Code: 130
+Output: {Use get_terminal_output for terminal with ID: 24146.}
+
+</context>
+<editorContext>
+The user's current file is /home/rainer/live/2025-09-08-copilot/src/components/arm.tsx. 
+</editorContext>
+<repoContext>
+Below is the information about the current repository. You can use this information when you need to calculate diffs or compare changes with the default branch.
+Repository name: 2025-09-08-copilot
+Owner: rstropek
+Current branch: main
+
+</repoContext>
+<reminderInstructions>
+When using the replace_string_in_file tool, include 3-5 lines of unchanged code before and after the string you want to replace, to make it unambiguous which part of the file should be edited.
+
+</reminderInstructions>
+<userRequest>
+I do not like the conversation to Rad happening when HOME_POSE is initialized. Please store degrees in HOME_POSE and convert to Rad wherever HOME_POSE is referenced.
+</userRequest>",
+      "copilot_cache_control": {
+        "type": "ephemeral"
+      }
+    }
+  ],
+  "model": "claude-sonnet-4",
+  "temperature": 0,
+  "top_p": 1,
+  "max_tokens": 16000,
+  "tools": [
+    {
+      "function": {
+        "name": "create_directory",
+        "description": "Create a new directory structure in the workspace. Will recursively create all directories in the path, like mkdir -p. You do not need to use this tool before using create_file, that tool will automatically create the needed directories.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "dirPath": {
+              "type": "string",
+              "description": "The absolute path to the directory to create."
+            }
+          },
+          "required": [
+            "dirPath"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "create_file",
+        "description": "This is a tool for creating a new file in the workspace. The file will be created with the specified content. The directory will be created if it does not already exist. Never use this tool to edit a file that already exists.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "The absolute path to the file to create."
+            },
+            "content": {
+              "type": "string",
+              "description": "The content to write to the file."
+            }
+          },
+          "required": [
+            "filePath",
+            "content"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "create_new_jupyter_notebook",
+        "description": "Generates a new Jupyter Notebook (.ipynb) in VS Code. Jupyter Notebooks are interactive documents commonly used for data exploration, analysis, visualization, and combining code with narrative text. This tool should only be called when the user explicitly requests to create a new Jupyter Notebook.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "The query to use to generate the jupyter notebook. This should be a clear and concise description of the notebook the user wants to create."
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "create_new_workspace",
+        "description": "Get steps to help the user create any project in a VS Code workspace. Use this tool to help users set up new projects, including TypeScript-based projects, Model Context Protocol (MCP) servers, VS Code extensions, Next.js projects, Vite projects, or any other project.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "The query to use to generate the new workspace. This should be a clear and concise description of the workspace the user wants to create."
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "edit_notebook_file",
+        "description": "This is a tool for editing an existing Notebook file in the workspace. Generate the \"explanation\" property first.
+The system is very smart and can understand how to apply your edits to the notebooks.
+When updating the content of an existing cell, ensure newCode includes at least 3-5 lines of context both before and after the new changes, preserving whitespace and indentation exactly.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "An absolute path to the notebook file to edit, or the URI of a untitled, not yet named, file, such as `untitled:Untitled-1."
+            },
+            "explanation": {
+              "type": "string",
+              "description": "A one-sentence description of edit operation. This will be shown to the user before the tool is run."
+            },
+            "cellId": {
+              "type": "string",
+              "description": "Id of the cell that needs to be deleted or edited. Use the value `TOP`, `BOTTOM` when inserting a cell at the top or bottom of the notebook, else provide the id of the cell after which a new cell is to be inserted. Remember, if a cellId is provided and editType=insert, then a cell will be inserted after the cell with the provided cellId."
+            },
+            "newCode": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "description": "The code for the new or existing cell to be edited. Code should not be wrapped within <VSCode.Cell> tags"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "The code for the new or existing cell to be edited. Code should not be wrapped within <VSCode.Cell> tags"
+                  }
+                }
+              ]
+            },
+            "language": {
+              "type": "string",
+              "description": "The language of the cell. `markdown`, `python`, `javascript`, `julia`, etc."
+            },
+            "editType": {
+              "type": "string",
+              "enum": [
+                "insert",
+                "delete",
+                "edit"
+              ],
+              "description": "The operation peformed on the cell, whether `insert`, `delete` or `edit`.
+Use the `editType` field to specify the operation: `insert` to add a new cell, `edit` to modify an existing cell's content, and `delete` to remove a cell."
+            }
+          },
+          "required": [
+            "filePath",
+            "explanation",
+            "editType"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "fetch_webpage",
+        "description": "Fetches the main content from a web page. This tool is useful for summarizing or analyzing the content of a webpage. You should use this tool when you think the user is looking for information from a specific webpage.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "urls": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "An array of URLs to fetch content from."
+            },
+            "query": {
+              "type": "string",
+              "description": "The query to search for in the web page's content. This should be a clear and concise description of the content you want to find."
+            }
+          },
+          "required": [
+            "urls",
+            "query"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "file_search",
+        "description": "Search for files in the workspace by glob pattern. This only returns the paths of matching files. Use this tool when you know the exact filename pattern of the files you're searching for. Glob patterns match from the root of the workspace folder. Examples:
+- **/*.{js,ts} to match all js/ts files in the workspace.
+- src/** to match all files under the top-level src folder.
+- **/foo/**/*.js to match all js files under any foo folder in the workspace.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search for files with names or paths matching this glob pattern."
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "The maximum number of results to return. Do not use this unless necessary, it can slow things down. By default, only some matches are returned. If you use this and don't see what you're looking for, you can try again with a more specific query or a larger maxResults."
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "test_search",
+        "description": "For a source code file, find the file that contains the tests. For a test file find the file that contains the code under test.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "filePaths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "filePaths"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "grep_search",
+        "description": "Do a fast text search in the workspace. Use this tool when you want to search with an exact string or regex. If you are not sure what words will appear in the workspace, prefer using regex patterns with alternation (|) or character classes to search for multiple potential words at once instead of making separate searches. For example, use 'function|method|procedure' to look for all of those words at once. Use includePattern to search within files matching a specific pattern, or in a specific file, using a relative path. Use this tool when you want to see an overview of a particular file, instead of using read_file many times to look for code within a file.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "The pattern to search for in files in the workspace. Use regex with alternation (e.g., 'word1|word2|word3') or character classes to find multiple potential words in a single search. Be sure to set the isRegexp property properly to declare whether it's a regex or plain text pattern. Is case-insensitive."
+            },
+            "isRegexp": {
+              "type": "boolean",
+              "description": "Whether the pattern is a regex."
+            },
+            "includePattern": {
+              "type": "string",
+              "description": "Search files matching this glob pattern. Will be applied to the relative path of files within the workspace. To search recursively inside a folder, use a proper glob pattern like \"src/folder/**\". Do not use | in includePattern."
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "The maximum number of results to return. Do not use this unless necessary, it can slow things down. By default, only some matches are returned. If you use this and don't see what you're looking for, you can try again with a more specific query or a larger maxResults."
+            }
+          },
+          "required": [
+            "query",
+            "isRegexp"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "get_changed_files",
+        "description": "Get git diffs of current file changes in a git repository. Don't forget that you can use run_in_terminal to run git commands in a terminal as well.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "repositoryPath": {
+              "type": "string",
+              "description": "The absolute path to the git repository to look for changes in. If not provided, the active git repository will be used."
+            },
+            "sourceControlState": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "staged",
+                  "unstaged",
+                  "merge-conflicts"
+                ]
+              },
+              "description": "The kinds of git state to filter by. Allowed values are: 'staged', 'unstaged', and 'merge-conflicts'. If not provided, all states will be included."
+            }
+          }
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "get_errors",
+        "description": "Get any compile or lint errors in a code file. If the user mentions errors or problems in a file, they may be referring to these. Use the tool to see the same errors that the user is seeing. Also use this tool after editing a file to validate the change.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "filePaths": {
+              "description": "The absolute paths to the files to check for errors.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "filePaths"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "copilot_getNotebookSummary",
+        "description": "This is a tool returns the list of the Notebook cells along with the id, cell types, language, execution information and output mime types for each cell. This is useful to get Cell Ids when executing a notebook or determine what cells have been executed and what order, or what cells have outputs. Requery this tool if the contents of the notebook change.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "An absolute path to the notebook file with the cell to run, or the URI of a untitled, not yet named, file, such as `untitled:Untitled-1.ipynb"
+            }
+          },
+          "required": [
+            "filePath"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "get_project_setup_info",
+        "description": "Do not call this tool without first calling the tool to create a workspace. This tool provides a project setup information for a Visual Studio Code workspace based on a project type and programming language.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "projectType": {
+              "type": "string",
+              "description": "The type of project to create. Supported values are: 'python-script', 'python-project', 'mcp-server', 'model-context-protocol-server', 'vscode-extension', 'next-js', 'vite' and 'other'"
+            }
+          },
+          "required": [
+            "projectType"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "get_search_view_results",
+        "description": "The results from the search view"
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "get_terminal_last_command",
+        "description": "Get the active terminal's last run command."
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "get_terminal_selection",
+        "description": "Get the user's current selection in the active terminal."
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "get_vscode_api",
+        "description": "Get relevant VS Code API references to answer questions about VS Code extension development. Use this tool when the user asks about VS Code APIs, capabilities, or best practices related to developing VS Code extensions. Use it in all VS Code extension development workspaces.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "The query to search vscode documentation for. Should contain all relevant context."
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "github_repo",
+        "description": "Searches a GitHub repository for relevant source code snippets. Only use this tool if the user is very clearly asking for code snippets from a specific GitHub repository. Do not use this tool for Github repos that the user has open in their workspace.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "repo": {
+              "type": "string",
+              "description": "The name of the Github repository to search for code in. Should must be formatted as '<owner>/<repo>'."
+            },
+            "query": {
+              "type": "string",
+              "description": "The query to search for repo. Should contain all relevant context."
+            }
+          },
+          "required": [
+            "repo",
+            "query"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "install_extension",
+        "description": "Install an extension in VS Code. Use this tool to install an extension in Visual Studio Code as part of a new workspace creation process only.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "The ID of the extension to install. This should be in the format <publisher>.<extension>."
+            },
+            "name": {
+              "type": "string",
+              "description": "The name of the extension to install. This should be a clear and concise description of the extension."
+            }
+          },
+          "required": [
+            "id",
+            "name"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "list_code_usages",
+        "description": "Request to list all usages (references, definitions, implementations etc) of a function, class, method, variable etc. Use this tool when 
+1. Looking for a sample implementation of an interface or class
+2. Checking how a function is used throughout the codebase.
+3. Including and updating all usages when changing a function, method, or constructor",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "symbolName": {
+              "type": "string",
+              "description": "The name of the symbol, such as a function name, class name, method name, variable name, etc."
+            },
+            "filePaths": {
+              "type": "array",
+              "description": "One or more file paths which likely contain the definition of the symbol. For instance the file which declares a class or function. This is optional but will speed up the invocation of this tool and improve the quality of its output.",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "symbolName"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "list_dir",
+        "description": "List the contents of a directory. Result will have the name of the child. If the name ends in /, it's a folder, otherwise a file",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "The absolute path to the directory to list."
+            }
+          },
+          "required": [
+            "path"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "open_simple_browser",
+        "description": "Preview a website or open a URL in the editor's Simple Browser. Useful for quickly viewing locally hosted websites, demos, or resources without leaving the coding environment.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "The website URL to preview or open in the Simple Browser inside the editor."
+            }
+          },
+          "required": [
+            "url"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "read_file",
+        "description": "Read the contents of a file. Line numbers are 1-indexed. This tool will truncate its output at 2000 lines and may be called repeatedly with offset and limit parameters to read larger files in chunks.",
+        "parameters": {
+          "type": "object",
+          "required": [
+            "filePath"
+          ],
+          "properties": {
+            "filePath": {
+              "description": "The absolute path of the file to read.",
+              "type": "string"
+            },
+            "offset": {
+              "description": "Optional: the 1-based line number to start reading from. Only use this if the file is too large to read at once. If not specified, the file will be read from the beginning.",
+              "type": "number"
+            },
+            "limit": {
+              "description": "Optional: the maximum number of lines to read. Only use this together with `offset` if the file is too large to read at once.",
+              "type": "number"
+            }
+          }
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "read_notebook_cell_output",
+        "description": "This tool will retrieve the output for a notebook cell from its most recent execution or restored from disk. The cell may have output even when it has not been run in the current kernel session. This tool has a higher token limit for output length than the runNotebookCell tool.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "An absolute path to the notebook file with the cell to run, or the URI of a untitled, not yet named, file, such as `untitled:Untitled-1.ipynb"
+            },
+            "cellId": {
+              "type": "string",
+              "description": "The ID of the cell for which output should be retrieved."
+            }
+          },
+          "required": [
+            "filePath",
+            "cellId"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "replace_string_in_file",
+        "description": "This is a tool for making edits in an existing file in the workspace. For moving or renaming files, use run in terminal tool with the 'mv' command instead. For larger edits, split them into smaller edits and call the edit tool multiple times to ensure accuracy. Before editing, always ensure you have the context to understand the file's contents and context. To edit a file, provide: 1) filePath (absolute path), 2) oldString (MUST be the exact literal text to replace including all whitespace, indentation, newlines, and surrounding code etc), and 3) newString (MUST be the exact literal text to replace \\`oldString\\` with (also including all whitespace, indentation, newlines, and surrounding code etc.). Ensure the resulting code is correct and idiomatic.). Each use of this tool replaces exactly ONE occurrence of oldString.
+
+CRITICAL for \\`oldString\\`: Must uniquely identify the single instance to change. Include at least 3 lines of context BEFORE and AFTER the target text, matching whitespace and indentation precisely. If this string matches multiple locations, or does not match exactly, the tool will fail. Never use ...existing code... comments in the oldString or newString.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "An absolute path to the file to edit."
+            },
+            "oldString": {
+              "type": "string",
+              "description": "The exact literal text to replace, preferably unescaped. For single replacements (default), include at least 3 lines of context BEFORE and AFTER the target text, matching whitespace and indentation precisely. For multiple replacements, specify expected_replacements parameter. If this string is not the exact literal text (i.e. you escaped it) or does not match exactly, the tool will fail."
+            },
+            "newString": {
+              "type": "string",
+              "description": "The exact literal text to replace `old_string` with, preferably unescaped. Provide the EXACT text. Ensure the resulting code is correct and idiomatic."
+            }
+          },
+          "required": [
+            "filePath",
+            "oldString",
+            "newString"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "run_notebook_cell",
+        "description": "This is a tool for running a code cell in a notebook file directly in the notebook editor. The output from the execution will be returned. Code cells should be run as they are added or edited when working through a problem to bring the kernel state up to date and ensure the code executes successfully. Code cells are ready to run and don't require any pre-processing. If asked to run the first cell in a notebook, you should run the first code cell since markdown cells cannot be executed. NOTE: Avoid executing Markdown cells or providing Markdown cell IDs, as Markdown cells cannot be  executed.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "filePath": {
+              "type": "string",
+              "description": "An absolute path to the notebook file with the cell to run, or the URI of a untitled, not yet named, file, such as `untitled:Untitled-1.ipynb"
+            },
+            "reason": {
+              "type": "string",
+              "description": "An optional explanation of why the cell is being run. This will be shown to the user before the tool is run and is not necessary if it's self-explanatory."
+            },
+            "cellId": {
+              "type": "string",
+              "description": "The ID for the code cell to execute. Avoid providing markdown cell IDs as nothing will be executed."
+            },
+            "continueOnError": {
+              "type": "boolean",
+              "description": "Whether or not execution should continue for remaining cells if an error is encountered. Default to false unless instructed otherwise."
+            }
+          },
+          "required": [
+            "filePath",
+            "cellId"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "run_vscode_command",
+        "description": "Run a command in VS Code. Use this tool to run a command in Visual Studio Code as part of a new workspace creation process only.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "commandId": {
+              "type": "string",
+              "description": "The ID of the command to execute. This should be in the format <command>."
+            },
+            "name": {
+              "type": "string",
+              "description": "The name of the command to execute. This should be a clear and concise description of the command."
+            },
+            "args": {
+              "type": "array",
+              "description": "The arguments to pass to the command. This should be an array of strings.",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "commandId",
+            "name"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "semantic_search",
+        "description": "Run a natural language search for relevant code or documentation comments from the user's current workspace. Returns relevant code snippets from the user's current workspace if it is large, or the full contents of the workspace if it is small.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "The query to search the codebase for. Should contain all relevant context. Should ideally be text that might appear in the codebase, such as function names, variable names, or comments."
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "test_failure",
+        "description": "Includes test failure information in the prompt."
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "think",
+        "description": "Use this tool to think deeply about the user's request and organize your thoughts. This tool helps improve response quality by allowing the model to consider the request carefully, brainstorm solutions, and plan complex tasks. It's particularly useful for:
+
+1. Exploring repository issues and brainstorming bug fixes
+2. Analyzing test results and planning fixes
+3. Planning complex refactoring approaches
+4. Designing new features and architecture
+5. Organizing debugging hypotheses
+
+The tool logs your thought process for transparency but doesn't execute any code or make changes.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "thoughts": {
+              "type": "string",
+              "description": "Your thoughts about the current task or problem. This should be a clear, structured explanation of your reasoning, analysis, or planning process."
+            }
+          },
+          "required": [
+            "thoughts"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "vscode_searchExtensions_internal",
+        "description": "This is a tool for browsing Visual Studio Code Extensions Marketplace. It allows the model to search for extensions and retrieve detailed information about them. The model should use this tool whenever it needs to discover extensions or resolve information about known ones. To use the tool, the model has to provide the category of the extensions, relevant search keywords, or known extension IDs. Note that search results may include false positives, so reviewing and filtering is recommended.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string",
+              "description": "The category of extensions to search for",
+              "enum": [
+                "AI",
+                "Azure",
+                "Chat",
+                "Data Science",
+                "Debuggers",
+                "Extension Packs",
+                "Education",
+                "Formatters",
+                "Keymaps",
+                "Language Packs",
+                "Linters",
+                "Machine Learning",
+                "Notebooks",
+                "Programming Languages",
+                "SCM Providers",
+                "Snippets",
+                "Testing",
+                "Themes",
+                "Visualization",
+                "Other"
+              ]
+            },
+            "keywords": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "The keywords to search for"
+            },
+            "ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "The ids of the extensions to search for"
+            }
+          }
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "create_and_run_task",
+        "description": "Creates and runs a build, run, or custom task for the workspace by generating or adding to a tasks.json file based on the project structure (such as package.json or README.md). If the user asks to build, run, launch and they have no tasks.json file, use this tool. If they ask to create or add a task, use this tool.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "workspaceFolder": {
+              "type": "string",
+              "description": "The absolute path of the workspace folder where the tasks.json file will be created."
+            },
+            "task": {
+              "type": "object",
+              "description": "The task to add to the new tasks.json file.",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "description": "The label of the task."
+                },
+                "type": {
+                  "type": "string",
+                  "description": "The type of the task. The only supported value is 'shell'.",
+                  "enum": [
+                    "shell"
+                  ]
+                },
+                "command": {
+                  "type": "string",
+                  "description": "The shell command to run for the task. Use this to specify commands for building or running the application."
+                },
+                "args": {
+                  "type": "array",
+                  "description": "The arguments to pass to the command.",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "isBackground": {
+                  "type": "boolean",
+                  "description": "Whether the task runs in the background without blocking the UI or other tasks. Set to true for long-running processes like watch tasks or servers that should continue executing without requiring user attention. When false, the task will block the terminal until completion."
+                },
+                "problemMatcher": {
+                  "type": "array",
+                  "description": "The problem matcher to use to parse task output for errors and warnings. Can be a predefined matcher like '$tsc' (TypeScript), '$eslint - stylish', '$gcc', etc., or a custom pattern defined in tasks.json. This helps VS Code display errors in the Problems panel and enables quick navigation to error locations.",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "group": {
+                  "type": "string",
+                  "description": "The group to which the task belongs."
+                }
+              },
+              "required": [
+                "label",
+                "type",
+                "command"
+              ]
+            }
+          },
+          "required": [
+            "task",
+            "workspaceFolder"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "get_task_output",
+        "description": "Get the output of a task",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "The task ID for which to get the output."
+            },
+            "workspaceFolder": {
+              "type": "string",
+              "description": "The workspace folder path containing the task"
+            }
+          },
+          "required": [
+            "id",
+            "workspaceFolder"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "get_terminal_output",
+        "description": "Get the output of a terminal command previously started with run_in_terminal",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "The ID of the terminal to check."
+            }
+          },
+          "required": [
+            "id"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "run_in_terminal",
+        "description": "This tool allows you to execute shell commands in a persistent terminal session, preserving environment variables, working directory, and other context across multiple commands.
+
+Command Execution:
+- Supports multi-line commands
+
+Directory Management:
+- Must use absolute paths to avoid navigation issues.
+
+Program Execution:
+- Supports Python, Node.js, and other executables.
+- Install dependencies via pip, npm, etc.
+
+Background Processes:
+- For long-running tasks (e.g., servers), set isBackground=true.
+- Returns a terminal ID for checking status and runtime later.
+
+Output Management:
+- Output is automatically truncated if longer than 60KB to prevent context overflow
+- Use filters like 'head', 'tail', 'grep' to limit output size
+- For pager commands, disable paging: use 'git --no-pager' or add '| cat'
+
+Best Practices:
+- Be specific with commands to avoid excessive output
+- Use targeted queries instead of broad scans
+- Consider using 'wc -l' to count before listing many items",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "description": "The command to run in the terminal."
+            },
+            "explanation": {
+              "type": "string",
+              "description": "A one-sentence description of what the command does. This will be shown to the user before the command is run."
+            },
+            "isBackground": {
+              "type": "boolean",
+              "description": "Whether the command starts a background process. If true, the command will run in the background and you will not see the output. If false, the tool call will block on the command finishing, and then you will get the output. Examples of background processes: building in watch mode, starting a server. You can check the output of a background process later on by using get_terminal_output."
+            }
+          },
+          "required": [
+            "command",
+            "explanation",
+            "isBackground"
+          ]
+        }
+      },
+      "type": "function"
+    },
+    {
+      "function": {
+        "name": "runTests",
+        "description": "Runs unit tests in files. Use this tool if the user asks to run tests or when you want to validate changes using unit tests. When possible, always try to provide `files` paths containing the relevant unit tests in order to avoid unnecessarily long test runs.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Absolute paths to the test files to run. If not provided, all test files will be run."
+            },
+            "testNames": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "An array of test suites, test classes, or test cases to run. If not provided, all tests in the files will be run."
+            }
+          }
+        }
+      },
+      "type": "function"
+    }
+  ],
+  "n": 1,
+  "stream": true
+}
