@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 interface ThreeSceneProps {
   className?: string;
@@ -79,6 +80,16 @@ export default function RobotArmScene({ className = '', color = 'black' }: Three
 
     // Add renderer to DOM
     container.appendChild(renderer.domElement);
+
+    // Camera controls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.screenSpacePanning = false;
+    controls.minDistance = 0.5;
+    controls.maxDistance = 5;
+    controls.maxPolarAngle = Math.PI;
+    controls.target.set(0, 0.5, 0); // Look at center of robot arm
 
     // Materials - use selected color for main robot parts
     const selectedColor = getColorHex(color);
@@ -270,11 +281,44 @@ export default function RobotArmScene({ className = '', color = 'black' }: Three
     directionalLight.shadow.camera.bottom = -5;
     scene.add(directionalLight);
 
-    // Render once (static scene)
-    renderer.render(scene, camera);
+    // Animation loop
+    let animationId: number;
+    const animate = () => {
+      animationId = requestAnimationFrame(animate);
+      
+      // Update controls
+      controls.update();
+      
+      // Render the scene
+      renderer.render(scene, camera);
+    };
+    
+    // Start animation loop
+    animate();
+
+    // Handle window resize
+    const handleResize = () => {
+      const { clientWidth: newWidth, clientHeight: newHeight } = container;
+      camera.aspect = newWidth / newHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(newWidth, newHeight);
+    };
+    
+    window.addEventListener('resize', handleResize);
 
     // Cleanup function
     return () => {
+      // Cancel animation frame
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+      
+      // Remove event listeners
+      window.removeEventListener('resize', handleResize);
+      
+      // Dispose controls
+      controls.dispose();
+      
       if (container && renderer.domElement) {
         container.removeChild(renderer.domElement);
       }
